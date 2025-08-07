@@ -1,12 +1,31 @@
 
+import { db } from '../db';
+import { filesTable } from '../db/schema';
 import { type GetFileInput, type FileUpload } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function getFile(input: GetFileInput): Promise<FileUpload | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to:
-    // 1. Query database for file by ID
-    // 2. Return file metadata if found, null if not found
-    // 3. This will be used to validate file exists before serving
-    
-    return null;
+  try {
+    const result = await db.select()
+      .from(filesTable)
+      .where(eq(filesTable.id, input.id))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    const file = result[0];
+    return {
+      id: file.id,
+      original_name: file.original_name,
+      file_path: file.file_path,
+      file_size: file.file_size, // bigint with mode: 'number' already returns number
+      mime_type: file.mime_type,
+      upload_date: file.upload_date,
+    };
+  } catch (error) {
+    console.error('Get file failed:', error);
+    throw error;
+  }
 }

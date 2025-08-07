@@ -1,17 +1,36 @@
 
+import { db } from '../db';
+import { filesTable } from '../db/schema';
 import { type GetFileInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function serveFile(input: GetFileInput): Promise<{
     filePath: string;
     originalName: string;
     mimeType: string;
 } | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to:
-    // 1. Validate file ID exists in database
-    // 2. Return file path, original name, and mime type for serving
-    // 3. This will be used by the file serving endpoint
-    // 4. Return null if file not found
-    
-    return null;
+    try {
+        // Query the database for the file by ID
+        const files = await db.select()
+            .from(filesTable)
+            .where(eq(filesTable.id, input.id))
+            .execute();
+
+        // Return null if file not found
+        if (files.length === 0) {
+            return null;
+        }
+
+        const file = files[0];
+
+        // Return file information for serving
+        return {
+            filePath: file.file_path,
+            originalName: file.original_name,
+            mimeType: file.mime_type
+        };
+    } catch (error) {
+        console.error('File retrieval failed:', error);
+        throw error;
+    }
 }

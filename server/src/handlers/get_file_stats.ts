@@ -1,15 +1,27 @@
 
+import { db } from '../db';
+import { filesTable } from '../db/schema';
+import { count, sum } from 'drizzle-orm';
 import { type FileStats } from '../schema';
 
 export async function getFileStats(): Promise<FileStats> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to:
-    // 1. Query database to count total number of uploaded files
-    // 2. Calculate total size of all uploaded files
-    // 3. Return statistics for homepage display
-    
+  try {
+    // Query database to get total files count and total size
+    const result = await db.select({
+      total_files: count(filesTable.id),
+      total_size: sum(filesTable.file_size)
+    })
+    .from(filesTable)
+    .execute();
+
+    const stats = result[0];
+
     return {
-        total_files: 0,
-        total_size: 0,
+      total_files: Number(stats.total_files) || 0,
+      total_size: Number(stats.total_size) || 0,
     };
+  } catch (error) {
+    console.error('Failed to get file stats:', error);
+    throw error;
+  }
 }
